@@ -1,0 +1,21 @@
+# IDE settings
+/.vscode
+
+
+# Keys and secrets
+**/*.pem
+
+
+# Python artifacts
+/.venv
+**/__pycache__
+**/*.pkl
+
+
+# ESP32 project artifacts
+**/sdkconfig
+**/sdkconfig.old
+**/build
+
+# Dataset
+/dataset
