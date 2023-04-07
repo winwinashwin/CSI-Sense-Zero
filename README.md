@@ -8,10 +8,6 @@ CSI-Sense-Zero offers a realtime human activity recognition solution capable of 
 
 ### Download dataset
 
-Dataset used for the project can be downloaded from [here](https://github.com/winwinashwin/CSI-Sense-Zero/releases/download/dataset-release-tag/csi-sense-dataset.tar.gz)
-
 ```bash
-wget https://github.com/winwinashwin/CSI-Sense-Zero/releases/download/dataset-release-tag/csi-sense-dataset.tar.gz
-wget https://github.com/winwinashwin/CSI-Sense-Zero/releases/download/dataset-release-tag/csi-sense-dataset.tar.gz.sha256sum
-sha256sum -c csi-sense-dataset.tar.gz.sha256sum
+./download_dataset.sh
 ```
