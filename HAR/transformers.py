@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 import pickle
 
-from rocket_functions import apply_kernels, generate_kernels
+from .rocket_functions import apply_kernels, generate_kernels
 
 
 class CSIScaler(TransformerMixin, BaseEstimator):
