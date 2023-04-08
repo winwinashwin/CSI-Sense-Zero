@@ -198,12 +198,12 @@ class GenMat:
 
 
 if __name__ == "__main__":
-    g = GenMat(preprocess=False, max_samples_per_class=100, winsize=256)
+    g = GenMat(preprocess=False, max_samples_per_class=120, winsize=256)
 
     g.add_class(
         "empty",
         sources=[
-            ("dataset/raw/empty-1.csi", 10, 10),
+            # ("dataset/raw/empty-1.csi", 10, 10),
             # ("dataset/raw/empty-2.csi", 10, 10),
             # ("dataset/raw/empty-3.csi", 5, 5),
             # ("dataset/raw/empty-4.csi", 3, 3),
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     g.add_class(
         "walk",
         sources=[
-            ("dataset/raw/walk-1.csi", 10, 10),
+            # ("dataset/raw/walk-1.csi", 10, 10),
             # ("dataset/raw/walk-2.csi", 5, 5),
             # ("dataset/raw/walk-3.csi", 5, 5),
             # ("dataset/raw/walk-4.csi", 3, 3),
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     g.add_class(
         "jump",
         sources=[
-            ("dataset/raw/jump-1.csi", 40, 40),
+            # ("dataset/raw/jump-1.csi", 40, 40),
             # ("dataset/raw/jump-2.csi", 40, 40),
             # ("dataset/raw/jump-3.csi", 40, 40),
             # ("dataset/raw/jump-4.csi", 5, 5),
@@ -253,4 +253,4 @@ if __name__ == "__main__":
 
     g.summary()
 
-    g.dump("dataset/rCSI-100-same-env.mat")
+    g.dump("dataset/rCSI-4.mat")
