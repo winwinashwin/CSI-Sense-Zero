@@ -18,7 +18,7 @@ from HAR.constants import CSI_COL_NAMES, NULL_SUBCARRIERS
 CSIFIFO = "/tmp/csififo"
 WINSIZE = 256
 KM_VERSION = 1
-
+TH_OPT = 0.0015
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,6 @@ def get_next_sample():
 
 pipe = Pipeline(
     [
-        ("scaler", CSIScaler()),
         (
             "feature_selector",
             Rocket(n_kernels=10_000, progress=False).load_kernels(
@@ -150,27 +149,39 @@ def animate(i):
 
 ani = animation.FuncAnimation(fig, animate, interval=100, cache_frame_data=False)
 plt.show()
+
+exit(0)
 """
 
 if __name__ == "__main__":
-    server = WebsocketServer("0.0.0.0", 9999, logging.INFO)
+    server = WebsocketServer("10.42.234.97", 10000, logging.INFO)
+    server.set_fn_new_client(lambda x, y: print("New client connection"))
 
     t = threading.Thread(target=server.run_forever, daemon=True)
     t.start()
 
     msg = {
         "timestamp": datetime.utcnow().isoformat(),
-        "hypothesis": 100,
+        "hypothesis": 0,
         "classnames": ["idle", "walk", "jump"],
     }
+
+    scaler = CSIScaler()
     try:
         while True:
             X = get_next_sample()
-            X = X.reshape(1, *X.shape)
-            y = pipe.predict(X)
-
             msg["timestamp"] = datetime.utcnow().isoformat()
-            msg["hypothesis"] = int(y[0])
+
+            X = X.reshape(1, *X.shape)
+
+            Xstd = scaler.fit_transform(X)
+            U, _, _ = np.linalg.svd(Xstd[0, :, :])
+
+            var = np.dot(U[:, 1], Xstd[0, :, :]).std() ** 2
+
+            h = int(pipe.predict(Xstd)[0]) if var > TH_OPT else 0
+
+            msg["hypothesis"] = h
 
             logger.info("Broadcasting hypothesis to clients")
             server.send_message_to_all(json.dumps(msg))
