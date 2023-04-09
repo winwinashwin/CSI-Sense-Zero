@@ -5,8 +5,12 @@ from sklearn.base import (
 import numpy as np
 from tqdm import tqdm
 import pickle
+import logging
 
 from .rocket_functions import apply_kernels, generate_kernels
+
+
+logger = logging.getLogger(__name__)
 
 
 class CSIScaler(TransformerMixin, BaseEstimator):
@@ -35,26 +39,28 @@ class CSIScaler(TransformerMixin, BaseEstimator):
 
 
 class Rocket(TransformerMixin, BaseEstimator):
-    def __init__(self, n_kernels=10_000) -> None:
+    def __init__(self, n_kernels=10_000, progress=True) -> None:
         super().__init__()
 
         self.n_kernels = n_kernels
+        self.progress = progress
         self._kernels = None
 
     def fit(self, X, y=None):
         n_samples, n_sc, t_max = X.shape
 
         if self._kernels is None:
-            print("=== Generating Kernels ===")
             self._kernels = generate_kernels(t_max, self.n_kernels)
         return self
 
     def transform(self, X):
         n_samples, n_sc, t_max = X.shape
 
-        print("=== Kernel Transform ===")
         Xr = np.zeros((X.shape[0], n_sc, 2 * self.n_kernels))
-        for isample in tqdm(range(n_samples)):
+        _iter = range(n_samples)
+        if self.progress:
+            _iter = tqdm(_iter)
+        for isample in _iter:
             Xr[isample, :, :] = apply_kernels(X[isample, :, :], self._kernels)
 
         return Xr
@@ -62,10 +68,10 @@ class Rocket(TransformerMixin, BaseEstimator):
     def dump_kernels(self, outfile):
         with open(outfile, "wb") as f:
             pickle.dump(self._kernels, f, protocol=4)
-        print(f"Kernels saved at {outfile}")
+        logger.info(f"Kernels saved at {outfile}")
 
     def load_kernels(self, infile):
-        print(f"Loading kernels from {infile}")
+        logger.info(f"Loading kernels from {infile}")
         with open(infile, "rb") as f:
             self._kernels = pickle.load(f)
 

@@ -7,6 +7,10 @@ from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm
 import pickle
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
@@ -21,7 +25,6 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
         n_samples, n_sc, t_max = X.shape
 
         if self._models is None:
-            print("=== Classifer Training ===")
             self._models = Parallel(n_jobs=-2, backend="threading")(
                 delayed(self._train_clf)(X[:, m_, :], y) for m_ in tqdm(range(n_sc))
             )
@@ -50,10 +53,10 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
         with open(outfile, "wb") as f:
             pickle.dump(self._models, f, protocol=4)
 
-        print(f"Models saved at {outfile}")
+        logger.info(f"Models saved at {outfile}")
 
     def load_models(self, infile):
-        print(f"Loading models from {infile}")
+        logger.info(f"Loading models from {infile}")
         with open(infile, "rb") as f:
             self._models = pickle.load(f)
 
