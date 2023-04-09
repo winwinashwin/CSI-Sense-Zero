@@ -1,0 +1,14 @@
+*.orig
+*~
+.~
+.*\.sw?
+*.ko
+*.o
+.*\.cmd
+.tmp_versions/*
+*.mod.*
+modules.order
+Module.symvers
+nbcat
+mkemlog
+emlog.ko.unsigned
