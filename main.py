@@ -13,35 +13,7 @@ import os
 
 from HAR.transformers import CSIScaler, Rocket
 from HAR.classifier import RidgeVotingClassifier
-
-CSI_COL_NAMES = [
-    "type",
-    "id",
-    "mac",
-    "rssi",
-    "rate",
-    "sig_mode",
-    "mcs",
-    "bandwidth",
-    "smoothing",
-    "not_sounding",
-    "aggregation",
-    "stbc",
-    "fec_coding",
-    "sgi",
-    "noise_floor",
-    "ampdu_cnt",
-    "channel",
-    "secondary_channel",
-    "local_timestamp",
-    "ant",
-    "sig_len",
-    "rx_state",
-    "len",
-    "first_word",
-    "data",
-]
-NULL_SUBCARRIERS = list(range(0, 10)) + list(range(118, 256))
+from HAR.constants import CSI_COL_NAMES, NULL_SUBCARRIERS
 
 CSIFIFO = "/tmp/csififo"
 WINSIZE = 256
@@ -119,6 +91,9 @@ def get_next_sample():
         diff = WINSIZE - csi_amp.shape[1]
 
         if diff > 0:
+            logger.warning(
+                "Bad lines detected during CSI parse. Broadcasting last column for compatibility"
+            )
             csi_amp = np.hstack(
                 (
                     csi_amp,
@@ -128,7 +103,7 @@ def get_next_sample():
 
         return csi_amp
     except Exception as e:
-        print(e)
+        logger.error("Error during CSI parse", exc_info=True)
         return None
 
 

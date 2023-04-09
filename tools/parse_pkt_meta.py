@@ -7,35 +7,7 @@
 
 import pandas as pd
 import sys
-
-
-CSI_COL_NAMES = [
-    "type",
-    "id",
-    "mac",
-    "rssi",
-    "rate",
-    "sig_mode",
-    "mcs",
-    "bandwidth",
-    "smoothing",
-    "not_sounding",
-    "aggregation",
-    "stbc",
-    "fec_coding",
-    "sgi",
-    "noise_floor",
-    "ampdu_cnt",
-    "channel",
-    "secondary_channel",
-    "local_timestamp",
-    "ant",
-    "sig_len",
-    "rx_state",
-    "len",
-    "first_word",
-    "data",
-]
+from HAR.constants import CSI_COL_NAMES
 
 # Ref: [1] https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_wifi.html#_CPPv418wifi_pkt_rx_ctrl_t
 # Ref: [2] https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/wifi.html#wi-fi-channel-state-information

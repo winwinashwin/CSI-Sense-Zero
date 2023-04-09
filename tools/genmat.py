@@ -11,36 +11,7 @@ import pandas as pd
 import numpy as np
 from skimage.restoration import denoise_wavelet
 import json
-
-CSI_COL_NAMES = [
-    "type",
-    "id",
-    "mac",
-    "rssi",
-    "rate",
-    "sig_mode",
-    "mcs",
-    "bandwidth",
-    "smoothing",
-    "not_sounding",
-    "aggregation",
-    "stbc",
-    "fec_coding",
-    "sgi",
-    "noise_floor",
-    "ampdu_cnt",
-    "channel",
-    "secondary_channel",
-    "local_timestamp",
-    "ant",
-    "sig_len",
-    "rx_state",
-    "len",
-    "first_word",
-    "data",
-]
-
-NULL_SUBCARRIERS = list(range(0, 10)) + list(range(118, 256))
+from HAR.constants import CSI_COL_NAMES, NULL_SUBCARRIERS
 
 
 def median_absolute_deviation(x):
