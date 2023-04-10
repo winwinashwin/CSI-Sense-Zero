@@ -13,6 +13,33 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class ActivityIndicatorClassifier(ClassifierMixin, BaseEstimator):
+    def __init__(self, threshold) -> None:
+        super().__init__()
+
+        self.threshold = threshold
+
+    def fit(self, X, y):
+        return self
+
+    def transform(self, X):
+        return X
+
+    def predict(self, X):
+        n_samples, n_sc, *_ = X.shape
+
+        final_predictions = np.zeros((n_samples,))
+
+        for isample in range(n_samples):
+            U, _, _ = np.linalg.svd(X[isample, :, :])
+
+            var = np.var(np.dot(U[:, 1], X[isample, :, :]))
+
+            final_predictions[isample] = var > self.threshold
+
+        return final_predictions
+
+
 class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, n_classes) -> None:
         super().__init__()
@@ -35,7 +62,7 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
 
     def predict(self, X):
         n_samples, n_sc, *_ = X.shape
-        final_predictions = []
+        final_predictions = np.zeros((n_samples,))
         for isample in range(n_samples):
             predictions = Parallel(n_jobs=1, backend="threading")(
                 delayed(self._score)(
@@ -46,8 +73,8 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
 
             unique, counts = np.unique(predictions, return_counts=True)
 
-            final_predictions.append(unique[np.argmax(counts)])
-        return np.array(final_predictions)
+            final_predictions[isample] = unique[np.argmax(counts)]
+        return final_predictions
 
     def dump_models(self, outfile):
         with open(outfile, "wb") as f:

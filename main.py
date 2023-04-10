@@ -1,65 +1,23 @@
-from websocket_server import WebsocketServer
 from sklearn.pipeline import Pipeline
 from datetime import datetime
 from io import StringIO
 import pandas as pd
 import numpy as np
-import threading
 import logging
-import errno
 import json
-import time
-import os
+import asyncio
 
-from HAR.transformers import CSIScaler, Rocket
-from HAR.classifier import RidgeVotingClassifier
 from HAR.constants import CSI_COL_NAMES, NULL_SUBCARRIERS
+from HAR.classifier import RidgeVotingClassifier, ActivityIndicatorClassifier
+from HAR.io import read_nonblocking, WebsocketBroadcastServer
+from HAR.transformers import CSIScaler, Rocket
 
 CSIFIFO = "/tmp/csififo"
 WINSIZE = 256
-KM_VERSION = 1
-TH_OPT = 0.0015
+KM_VERSION = 2
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def read_nonblocking(path, bufferSize=100, timeout=0.100):
-    """
-    Implementation of a non-blocking read
-    works with a named pipe or file
-
-    errno 11 occurs if pipe is still written too, wait until some data
-    is available
-    """
-    grace = True
-    result = []
-    try:
-        pipe = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
-        while True:
-            try:
-                buf = os.read(pipe, bufferSize)
-                if not buf:
-                    break
-                else:
-                    content = buf.decode("utf-8")
-                    line = content.split("\n")
-                    result.extend(line)
-            except OSError as e:
-                if e.errno == 11 and grace:
-                    # grace period, first write to pipe might take some time
-                    # further reads after opening the file are then successful
-                    time.sleep(timeout)
-                    grace = False
-                else:
-                    break
-
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            pipe = None
-        else:
-            raise e
-
-    return result
 
 
 def get_next_sample():
@@ -107,8 +65,16 @@ def get_next_sample():
         return None
 
 
-pipe = Pipeline(
+activity_detection_pipeline = Pipeline(
     [
+        ("scaler", CSIScaler()),
+        ("classifier", ActivityIndicatorClassifier(threshold=0.3)),
+    ]
+)
+
+activity_classification_pipeline = Pipeline(
+    [
+        ("scaler", CSIScaler()),
         (
             "feature_selector",
             Rocket(n_kernels=10_000, progress=False).load_kernels(
@@ -136,14 +102,23 @@ fig = plt.figure(figsize=(8, 8))
 ax1 = fig.add_subplot(1, 1, 1)
 ax1.title.set_text("CSI LLTF Live")
 
+scaler = CSIScaler()
 
 def animate(i):
     csi = get_next_sample()
     if csi is None:
         return
+    X = scaler.fit_transform(csi.reshape(1, *csi.shape))
+
+    U, _, _ = np.linalg.svd(X[0, :, :])
+    s = np.dot(U[:, 1], X[0, :, :])
+
+
     # print(csi.min(), csi.max())
     ax1.clear()
-    ax1.imshow(csi, aspect="auto", cmap="hsv", vmin=0, vmax=100)
+    # ax1.imshow(csi, aspect="auto", cmap="hsv", vmin=0, vmax=100)
+    ax1.plot(s)
+    ax1.set_ylim((-1, 1))
     ax1.grid(0)
 
 
@@ -153,38 +128,35 @@ plt.show()
 exit(0)
 """
 
+msg = {
+    "timestamp": datetime.utcnow().isoformat(),
+    "hypothesis": 0,
+    "classnames": ["idle", "walk", "jump"],
+}
+
+
+def make_prediction():
+    X = get_next_sample()
+    if X is None:
+        return None
+
+    msg["timestamp"] = datetime.utcnow().isoformat()
+
+    X = X.reshape(1, *X.shape)
+
+    h = int(activity_detection_pipeline.predict(X)[0])
+    if h:
+        h = int(activity_classification_pipeline.predict(X)[0])
+
+    msg["hypothesis"] = h
+    return json.dumps(msg)
+
+
 if __name__ == "__main__":
-    server = WebsocketServer("10.42.234.97", 10000, logging.INFO)
-    server.set_fn_new_client(lambda x, y: print("New client connection"))
-
-    t = threading.Thread(target=server.run_forever, daemon=True)
-    t.start()
-
-    msg = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "hypothesis": 0,
-        "classnames": ["idle", "walk", "jump"],
-    }
-
-    scaler = CSIScaler()
-    try:
-        while True:
-            X = get_next_sample()
-            msg["timestamp"] = datetime.utcnow().isoformat()
-
-            X = X.reshape(1, *X.shape)
-
-            Xstd = scaler.fit_transform(X)
-            U, _, _ = np.linalg.svd(Xstd[0, :, :])
-
-            var = np.dot(U[:, 1], Xstd[0, :, :]).std() ** 2
-
-            h = int(pipe.predict(Xstd)[0]) if var > TH_OPT else 0
-
-            msg["hypothesis"] = h
-
-            logger.info("Broadcasting hypothesis to clients")
-            server.send_message_to_all(json.dumps(msg))
-
-    except KeyboardInterrupt:
-        pass
+    server = WebsocketBroadcastServer(
+        host="localhost",
+        port=9999,
+        message_generator=make_prediction,
+        broadcast_frequency=2,
+    )
+    asyncio.run(server.run())
