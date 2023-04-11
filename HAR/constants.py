@@ -25,4 +25,6 @@ CSI_COL_NAMES = [
     "first_word",
     "data",
 ]
+
+# Remove null subcarriers + HTLTF
 NULL_SUBCARRIERS = list(range(0, 10)) + list(range(118, 256))

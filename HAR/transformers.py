@@ -1,11 +1,9 @@
-from sklearn.base import (
-    BaseEstimator,
-    TransformerMixin,
-)
-import numpy as np
 from tqdm import tqdm
 import pickle
 import logging
+
+import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from .rocket_functions import apply_kernels, generate_kernels
 

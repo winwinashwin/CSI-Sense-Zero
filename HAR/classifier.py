@@ -1,13 +1,11 @@
-from sklearn.base import (
-    BaseEstimator,
-    ClassifierMixin,
-)
-from sklearn.linear_model import RidgeClassifierCV
 from joblib import Parallel, delayed
-import numpy as np
 from tqdm import tqdm
-import pickle
 import logging
+import pickle
+
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.linear_model import RidgeClassifierCV
 
 
 logger = logging.getLogger(__name__)
