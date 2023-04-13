@@ -9,6 +9,11 @@ Approach based on ideas from [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and
 </div>
 
 ---
+
+<img src="./assets/arch.png">
+
+---
+
 ## Getting Started
 
 ### Configuring ESPs
