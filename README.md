@@ -6,7 +6,7 @@ CSI-Sense-Zero offers a realtime human activity recognition solution capable of 
 
 A large pool of randomly initialized kernels are used to extract features from each valid subcarrier. The extracted features are then used for activity classification using a simple ridge regression classifier followed by majority voting.
 
-Approach based of off papers [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and [Rocket](https://arxiv.org/pdf/1910.13051.pdf).
+Approach based on papers [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and [Rocket](https://arxiv.org/pdf/1910.13051.pdf).
 
 ## Get Started
 
@@ -14,6 +14,12 @@ Approach based of off papers [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and
 
 ```bash
 ./download_dataset.sh
+```
+
+### Install runtime requirements
+
+```bash
+pip3 install -r requires/runtime.txt
 ```
 
 ### Train parameters
