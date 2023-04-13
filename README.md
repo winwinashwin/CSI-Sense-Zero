@@ -57,13 +57,8 @@ python3 train.py --main-set ./dataset/rCSI-5.mat --hold-set ./dataset/rCSI-3.mat
 python3 main.py --load artifacts/v1 --host 127.0.0.1 --port 9999 --frequency 2
 ```
 
-[^1]: - Training starts with a train-test split on the `main-set` as per `train-size`
-    - The model is tested on the test split as well as a `hold-set`. The hold-set should ideally have CSI data captured on a different day and/or by different volunteers to see how well the model has generalised
+[^1]: Training starts with a train-test split on the `main-set` as per `train-size`. The model is tested on the test split as well as a `hold-set`. The hold-set should ideally have CSI data captured on a different day and/or by different volunteers to see how well the model has generalised
 
-[^2]: - Creates a log file `/tmp/csififo`, with;
-        - 235k buffer size (hold ~256 CSI records)
-        - File permissions 0644
-        - Owned by user with UID == 1000
-    - Reads serial device `/dev/ttyUSB0` at baud 921600 and populates `/tmp/csififo`
+[^2]: Creates a log file `/tmp/csififo` with 235k buffer size (holds ~256 CSI records) owned by user with UID == 1000 and file permissions 0644 . Reads serial device `/dev/ttyUSB0` at baud 921600 and populates `/tmp/csififo`
 
-[^3]: - Loads parameters from `artifacts/v1` and broadcasts predictions using a websocket server serving at 127.0.0.1:9999 at a frequency of 2 Hz
+[^3]: Loads parameters from `artifacts/v1` and broadcasts predictions using a websocket server serving at 127.0.0.1:9999 at a frequency of 2 Hz
