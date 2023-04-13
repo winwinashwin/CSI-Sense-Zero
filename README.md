@@ -36,8 +36,7 @@ pip3 install -r requires/runtime.txt
 ./tools/download_dataset.sh
 ```
 
-TODO: @winwinashwin Document steps for creating custom dataset
-
+For generating/training on a custom dataset, checkout the project [wiki](https://github.com/winwinashwin/CSI-Sense-Zero/wiki/Creating-and-Training-on-Custom-Dataset).
 - Train parameters[^1]
 
 ```bash
