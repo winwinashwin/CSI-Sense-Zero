@@ -8,11 +8,9 @@ This script strips away the character from csi logs.
 
 import sys
 
-file = sys.argv[1]
+input_file = sys.argv[1]
+output_file = f"{input_file}.cleaned"
 
-with open(file) as fp:
-    lines = fp.readlines()
-    cleaned = [line[:-1] for line in lines]
-
-with open(file + ".cleaned", "w") as fp:
-    print(*cleaned, sep="\n", file=fp)
+with open(input_file, "r") as f_in, open(output_file, "w") as f_out:
+    for line in f_in:
+        f_out.write(line.rstrip() + "\n")
