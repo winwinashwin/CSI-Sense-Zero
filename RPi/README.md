@@ -1,6 +1,8 @@
-# CSI-Sense-Zero/RPi
+# CSI-Sense-Zero / RPi
 
 Binaries, scripts and configuration files that go into the Raspberry Pi.
+
+Tested on: **Raspberry Pi Zero 2W** running **Raspbian OS Lite**
 
 ## Setting up the Pi
 
@@ -22,3 +24,5 @@ sudo echo emlog >> /etc/modules  # might need to run in root shell
 
 sudo reboot
 ```
+
+Communication between the CSI receiver ESP board and the Pi could be established by either UART or USB serial. You may want to configure the [`serialread.sh`](./serialread.sh) script accordingly.
