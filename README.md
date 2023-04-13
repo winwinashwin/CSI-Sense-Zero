@@ -13,7 +13,7 @@ Approach based on papers [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and [Ro
 ### Download dataset
 
 ```bash
-./download_dataset.sh
+./tools/download_dataset.sh
 ```
 
 ### Install runtime requirements
@@ -35,7 +35,7 @@ python3 train.py --main-set ./dataset/rCSI-5.mat --hold-set ./dataset/rCSI-3.mat
 > The following command creates a log file `/tmp/csififo` with 235k buffer (holds ~256 CSI records) with file permissions 0644, owned by a user with UID==1000, reads serial device `/dev/ttyUSB0` at baud 921600 and populates the log file
 
 ```bash
-./populate_csififo.sh -d /dev/ttyUSB0 -b 921600 -n /tmp/csififo -s 235 -p 0644 -u 1000
+./tools/populate_csififo.sh -d /dev/ttyUSB0 -b 921600 -n /tmp/csififo -s 235 -p 0644 -u 1000
 ```
 
 - Run HAR

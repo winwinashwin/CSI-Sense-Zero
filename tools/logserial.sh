@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Set default values
 device="/dev/ttyUSB0"
@@ -21,8 +21,8 @@ shift $((OPTIND-1))
 
 # Output configuration settings
 echo "[*] Serial device: $device"
-echo "[*] Baud rate: $baud"
-echo "[*] Log file: $logfile"
+echo "[*] Baud rate    : $baud"
+echo "[*] Log file     : $logfile"
 
 # Countdown before starting
 for i in {10..1}; do
