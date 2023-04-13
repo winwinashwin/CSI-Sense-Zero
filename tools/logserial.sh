@@ -6,13 +6,13 @@ baud="921600"
 logfile="serial.csi"
 
 # Parse command-line arguments
-while getopts ":p:b:l:h" opt; do
+while getopts ":d:b:l:h" opt; do
   case "$opt" in
-    p) device="$OPTARG" ;;
+    d) device="$OPTARG" ;;
     b) baud="$OPTARG" ;;
     l) logfile="$OPTARG" ;;
     h|*) 
-       echo "Usage: $(basename "$0") [-p port] [-b baud] [-l logfile]"
+       echo "Usage: $(basename "$0") [-d device] [-b baud] [-l logfile]"
        exit 1 
        ;;
   esac
