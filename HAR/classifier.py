@@ -28,6 +28,8 @@ class ActivityIndicatorClassifier(ClassifierMixin, BaseEstimator):
 
         final_predictions = np.zeros((n_samples,))
 
+        # For each sample, take the second principal component and compute its
+        # variance. Activity detected if variance is greater than threshold.
         for isample in range(n_samples):
             U, _, _ = np.linalg.svd(X[isample, :, :])
 
@@ -49,6 +51,7 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
     def fit(self, X, y):
         n_samples, n_sc, t_max = X.shape
 
+        # Train models
         if self._models is None:
             self._models = Parallel(n_jobs=-2, backend="threading")(
                 delayed(self._train_clf)(X[:, m_, :], y) for m_ in tqdm(range(n_sc))
@@ -62,6 +65,7 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
         n_samples, n_sc, *_ = X.shape
         final_predictions = np.zeros((n_samples,))
         for isample in range(n_samples):
+            # Get predictions from each model followed by majority voting
             predictions = Parallel(n_jobs=1, backend="threading")(
                 delayed(self._score)(
                     self._models[m_], np.expand_dims(X[isample, m_, :], axis=0)
