@@ -1,60 +1,53 @@
+from sklearn.base import ClassifierMixin, BaseEstimator
 from joblib import Parallel, delayed
 from tqdm import tqdm
-import logging
-import pickle
-
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
+import pickle
+import logging
 from sklearn.linear_model import RidgeClassifierCV
-
 
 logger = logging.getLogger(__name__)
 
 
-class ActivityIndicatorClassifier(ClassifierMixin, BaseEstimator):
+class PC2VarBinaryClassifer(ClassifierMixin, BaseEstimator):
     def __init__(self, threshold) -> None:
         super().__init__()
 
         self.threshold = threshold
 
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         return self
 
     def transform(self, X):
         return X
 
     def predict(self, X):
-        n_samples, n_sc, *_ = X.shape
+        U, _, _ = np.linalg.svd(X)
+        pc2 = np.einsum("ijk,ij->ik", X, U[:, :, 1])
+        variances = np.var(pc2, axis=1)
 
-        final_predictions = np.zeros((n_samples,))
+        clf = variances > self.threshold
 
-        # For each sample, take the second principal component and compute its
-        # variance. Activity detected if variance is greater than threshold.
-        for isample in range(n_samples):
-            U, _, _ = np.linalg.svd(X[isample, :, :])
-
-            var = np.var(np.dot(U[:, 1], X[isample, :, :]))
-
-            final_predictions[isample] = var > self.threshold
-
-        return final_predictions
+        return clf
 
 
 class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
-    def __init__(self, n_classes) -> None:
+    def __init__(self, n_classes, show_progress=True) -> None:
         super().__init__()
 
         self.n_classes = n_classes
+        self.show_progress = show_progress
 
         self._models = None
 
     def fit(self, X, y):
-        n_samples, n_sc, t_max = X.shape
+        n_samples, n_sc, t_win = X.shape
 
         # Train models
         if self._models is None:
             self._models = Parallel(n_jobs=-2, backend="threading")(
-                delayed(self._train_clf)(X[:, m_, :], y) for m_ in tqdm(range(n_sc))
+                delayed(self._train_clf)(X[:, m_, :], y)
+                for m_ in tqdm(range(n_sc), disable=not self.show_progress)
             )
         return self
 
@@ -78,18 +71,15 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
             final_predictions[isample] = unique[np.argmax(counts)]
         return final_predictions
 
-    def dump_models(self, outfile):
-        with open(outfile, "wb") as f:
-            pickle.dump(self._models, f, protocol=4)
+    def save(self, path):
+        with open(path, "wb") as f:
+            pickle.dump(self._models, f, protocol=pickle.HIGHEST_PROTOCOL)
+        logger.info(f"Models saved at {path}")
 
-        logger.info(f"Models saved at {outfile}")
-
-    def load_models(self, infile):
-        logger.info(f"Loading models from {infile}")
-        with open(infile, "rb") as f:
+    def load(self, path):
+        logger.info(f"Loading models from {path}")
+        with open(path, "rb") as f:
             self._models = pickle.load(f)
-
-        return self
 
     def _train_clf(self, X, y):
         model = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10))

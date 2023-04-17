@@ -3,12 +3,10 @@ import logging
 
 import scipy.io
 import numpy as np
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
-from HAR.transformers import CSIScaler, Rocket
-from HAR.classifier import RidgeVotingClassifier
+from HAR import CSIActivityRecognitionPipeline
 
 
 logging.basicConfig(level=logging.INFO)
@@ -41,28 +39,20 @@ class CSIHARGym:
         self.hold_set = hold_set
         self.train_size = train_size
         self.params_dest = pathlib.Path(params_dest)
+
         self.params_dest.mkdir(parents=True, exist_ok=True)
 
-        self.pipe = Pipeline(
-            [
-                ("scaler", CSIScaler()),
-                (
-                    "feature_selector",
-                    Rocket(n_kernels=self.N_KERNELS, progress=True),
-                ),
-                (
-                    "classifier",
-                    RidgeVotingClassifier(n_classes=self.N_CLASSES),
-                ),
-            ]
+        self.pipe = CSIActivityRecognitionPipeline(
+            n_classes=len(self.ACTIVITY_CLASSES),
+            n_kernels=self.N_KERNELS,
+            batch_size=64,
+            normalize_input=True,
+            show_progress=True,
         )
 
     def run(self):
-        X, y, _, _, dim = load_dataset(self.main_set)
-        X = X.reshape(X.shape[0], *dim)
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, train_size=self.train_size, stratify=y
+        X_train, X_test, y_train, y_test = self._load_splits(
+            self.main_set, self.train_size
         )
 
         print("> Training phase")
@@ -71,13 +61,19 @@ class CSIHARGym:
         print("> Testing phase 1")
         self._test(X_test, y_test)
 
-        X, y, _, _, dim = load_dataset(self.hold_set)
-        X = X.reshape(X.shape[0], *dim)
+        X, _, y, _ = self._load_splits(self.hold_set, None)
 
         print("> Testing phase 2")
         self._test(X, y)
 
-        self._dump_params()
+        self.pipe.save(self.params_dest)
+
+    def _load_splits(self, dataset, train_size):
+        X, y, _, _, dim = load_dataset(dataset)
+        X = X.reshape(X.shape[0], *dim)
+        if train_size is None:
+            return X, _, y, _
+        return train_test_split(X, y, train_size=train_size, stratify=y)
 
     def _train(self, X, y):
         self.pipe.fit_transform(X, y)
@@ -90,10 +86,6 @@ class CSIHARGym:
         print(confusion_matrix(y, y_pred))
         print("\n> Classification Report :")
         print(classification_report(y, y_pred, target_names=self.ACTIVITY_CLASSES))
-
-    def _dump_params(self):
-        self.pipe[1].dump_kernels(self.params_dest / "kernels.pkl")
-        self.pipe[2].dump_models(self.params_dest / "models.pkl")
 
 
 def main(args):

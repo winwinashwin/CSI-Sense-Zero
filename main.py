@@ -7,12 +7,14 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from sklearn.pipeline import Pipeline
 
-from HAR.classifier import ActivityIndicatorClassifier, RidgeVotingClassifier
+from HAR import (
+    CSIMinMaxScaler,
+    CSIActivityRecognitionPipeline,
+    CSIActivityIndicatorPipeline,
+)
 from HAR.constants import CSI_COL_NAMES, NULL_SUBCARRIERS
 from HAR.io import WebsocketBroadcastServer, read_nonblocking
-from HAR.transformers import CSIScaler, Rocket
 
 
 # Set up logging
@@ -35,37 +37,17 @@ class CSIHAR:
     def __init__(self, params_dir) -> None:
         self.params_dir = params_dir
 
-        self.activity_detection_pipeline = Pipeline(
-            [
-                ("scaler", CSIScaler()),
-                (
-                    "classifier",
-                    ActivityIndicatorClassifier(threshold=self.ACTIVITY_THRESHOLD),
-                ),
-            ]
+        self.scaler = CSIMinMaxScaler()
+        self.activity_detection = CSIActivityIndicatorPipeline(
+            self.ACTIVITY_THRESHOLD, normalize_input=False
         )
-
-        self.activity_classification_pipeline = Pipeline(
-            [
-                ("scaler", CSIScaler()),
-                (
-                    "feature_selector",
-                    Rocket(n_kernels=self.N_KERNELS, progress=False).load_kernels(
-                        f"{self.params_dir}/kernels.pkl"
-                    ),
-                ),
-                (
-                    "classifier",
-                    RidgeVotingClassifier(n_classes=self.N_CLASSES).load_models(
-                        f"{self.params_dir}/models.pkl"
-                    ),
-                ),
-            ]
-        )
+        self.activity_recognition = CSIActivityRecognitionPipeline(
+            self.N_CLASSES, self.N_KERNELS, normalize_input=False, show_progress=False
+        ).load(self.params_dir)
 
         self.msg = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "hypothesis": 0,
+            "timestamp": None,
+            "hypothesis": None,
             "classnames": self.ACTIVITY_CLASSES,
         }
 
@@ -84,10 +66,11 @@ class CSIHAR:
         self.msg["timestamp"] = datetime.utcnow().isoformat()
 
         X = X.reshape(1, *X.shape)
+        X = self.scaler.fit_transform(X)
 
-        h = int(self.activity_detection_pipeline.predict(X)[0])
+        h = int(self.activity_detection.predict(X)[0])
         if h:
-            h = int(self.activity_classification_pipeline.predict(X)[0])
+            h = int(self.activity_recognition.predict(X)[0])
 
         self.msg["hypothesis"] = h
         return json.dumps(self.msg)
@@ -154,7 +137,7 @@ def main(args):
         host=args.host,
         port=args.port,
         message_generator=har.make_prediction,
-        broadcast_frequency=args.broadcast_frequency,
+        broadcast_frequency=args.frequency,
     )
 
     asyncio.run(server.run())
