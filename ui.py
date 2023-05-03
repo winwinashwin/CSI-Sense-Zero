@@ -1,7 +1,7 @@
 """
 This script creates a simple GUI to visualize HAR predictions received over a WebSocket connection.
-class name in a large font on a black background. The prediction is expected as a JSON
-message over the WebSocket connection, and is extracted and displayed on the GUI.
+The prediction is expected as a JSON message over the WebSocket connection, and is extracted and 
+displayed on the GUI.
 
 
 Command line arguments:
