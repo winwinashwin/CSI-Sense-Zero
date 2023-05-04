@@ -11,7 +11,7 @@ def read_nonblocking(path, bufferSize=100, timeout=0.100) -> List[str]:
     """
     Implementation of a non-blocking read, works with a named pipe or file.
     errno 11 occurs if pipe is still written too, wait until some data is available
-    
+
     Adapted from: https://gist.github.com/conrad784/862b9d050e5018104d2e7ea900d057b8
 
     Args:

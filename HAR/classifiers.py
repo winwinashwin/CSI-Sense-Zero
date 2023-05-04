@@ -22,7 +22,18 @@ class PC2VarBinaryClassifer(ClassifierMixin, BaseEstimator):
         return X
 
     def predict(self, X):
+        # X.shape = (n_samples, n_subcarriers, time_win)
+        # SVD in "stacked" mode, SVD is applied to each combination of last two indices
         U, _, _ = np.linalg.svd(X)
+
+        # 1. Noise induced by internal state changes are present in CSI streams. Due to high correlation,
+        # these noises are captured in the first principal component along with movement signal.
+        # 2. Phase of a subcarrier is a linear combination of two orthogonal components (sine and cosine).
+        # PCA components are uncorrelated, first princ. component contains only one of these orthogonal
+        # components and the other is retained in the rest. Hence we can safely discard PC1 and focus on PC2.
+
+        # For each sample, take projection along second principal component
+        # https://ajcr.net/Basic-guide-to-einsum/
         pc2 = np.einsum("ijk,ij->ik", X, U[:, :, 1])
         variances = np.var(pc2, axis=1)
 
