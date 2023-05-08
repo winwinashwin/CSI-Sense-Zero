@@ -39,6 +39,7 @@ class PC2VarBinaryClassifer(ClassifierMixin, BaseEstimator):
 
         clf = variances > self.threshold
 
+        logger.debug(f"[PC2VarBinaryClf] variances = {variances}")
         return clf
 
 
@@ -80,6 +81,7 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
             unique, counts = np.unique(predictions, return_counts=True)
 
             final_predictions[isample] = unique[np.argmax(counts)]
+        logger.debug(f"[RidgeVotingClf] predictions = {final_predictions}")
         return final_predictions
 
     def save(self, path):

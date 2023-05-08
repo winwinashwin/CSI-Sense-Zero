@@ -65,7 +65,8 @@ class Rocket(TransformerMixin, BaseEstimator):
         Xf = np.zeros((ts_sz, 2 * self.n_kernels))
         X = X.reshape(ts_sz, t_win)
 
-        print("Kernel Transform")
+        if self.show_progress:
+            print("Kernel Transform")
         for i in tqdm(range(0, ts_sz, self.batch_sz), disable=not self.show_progress):
             j = i + self.batch_sz
             Xf[i:j, :] = apply_kernels(X[i:j, :], self._kernels)
