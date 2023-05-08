@@ -6,7 +6,7 @@
 **/*.pem
 
 
-# Python artifacts
+# Python
 /.venv
 **/__pycache__
 **/*.pkl
@@ -22,3 +22,10 @@
 /dataset
 **/*.tar.gz
 
+
+# Sketches
+**/*.excalidraw
+
+
+# Playground
+/playground
