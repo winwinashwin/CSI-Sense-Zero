@@ -34,13 +34,14 @@ pip3 install -r requires/runtime.txt
 
 ```bash
 ./scripts/download_dataset.sh
+./scripts/genmat.py --recipe ./dataset/recipes.yaml
 ```
 
 For generating/training on a custom dataset, checkout the project [wiki](https://github.com/winwinashwin/CSI-Sense-Zero/wiki/Creating-and-Training-on-Custom-Dataset).
 - Train parameters[^1]
 
 ```bash
-python3 train.py --main-set ./dataset/rCSI-5.mat --hold-set ./dataset/rCSI-3.mat --train-size 0.8 --dump artifacts/v1
+python3 train.py --main-set ./dataset/rCSI-d1d2.mat --hold-set ./dataset/rCSI-d3.mat --train-size 0.8 --dump artifacts/v1
 ```
 
 ### Configuring the Pi
