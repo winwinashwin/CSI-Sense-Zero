@@ -1,29 +1,21 @@
+#!/usr/bin/env python3
+
+"""Training script for
+    - Generating conv. kernels
+    - Training ridge classifiers
+    - Exporting kernels and classifiers
+"""
 import pathlib
 import logging
 
-import scipy.io
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
 from HAR import CSIActivityRecognitionPipeline
-
+from HAR.io import load_dataset
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def load_dataset(infile):
-    mat = scipy.io.loadmat(infile)
-    X = mat["csi"].T
-    nsamples = mat["nsamples"].flatten()
-    dim = mat["dim"].flatten()
-    classnames = list(map(lambda s: s.strip().title(), mat["classnames"]))
-    y = []
-    for i in range(len(classnames)):
-        y += [i] * nsamples[i]
-    y = np.array(y)
-    return X, y, nsamples, classnames, dim
 
 
 class CSIHARGym:
@@ -31,7 +23,7 @@ class CSIHARGym:
     ACTIVITY_CLASSES = ["idle", "walk", "jump"]
 
     # Constants for classifier
-    N_KERNELS = 10_000
+    N_KERNELS = 500
     N_CLASSES = len(ACTIVITY_CLASSES)
 
     def __init__(self, main_set, hold_set, train_size, params_dest) -> None:
@@ -130,4 +122,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args)
+
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        logger.error("Terminated")
+        pass

@@ -78,8 +78,8 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
                 for m_ in range(n_sc)
             )
 
+            # majority votin
             unique, counts = np.unique(predictions, return_counts=True)
-
             final_predictions[isample] = unique[np.argmax(counts)]
         logger.debug(f"[RidgeVotingClf] predictions = {final_predictions}")
         return final_predictions
@@ -95,6 +95,7 @@ class RidgeVotingClassifier(ClassifierMixin, BaseEstimator):
             self._models = pickle.load(f)
 
     def _train_clf(self, X, y):
+        """Train a Ridge Classifier"""
         model = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10))
         model.fit(X, y)
         return model

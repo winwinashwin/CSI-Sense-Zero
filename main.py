@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import asyncio
 import json
 import logging
@@ -31,7 +33,7 @@ class CSIHAR:
     ACTIVITY_CLASSES = ["idle", "walk", "jump"]
 
     # Constants for classifier
-    N_KERNELS = 10_000
+    N_KERNELS = 500
     N_CLASSES = len(ACTIVITY_CLASSES)
 
     def __init__(self, params_dir) -> None:
@@ -53,7 +55,7 @@ class CSIHAR:
 
     def make_prediction(self) -> Optional[str]:
         """
-        Generates a prediction based on the next CSI sample from the CSIFIFO, using a pipeline of transformers and classifiers.
+        Generates a prediction based on the next CSI sample from the CSIFIFO, using activity detection and recognition pipelines.
         Returns a JSON string containing the timestamp and predicted activity, or None if the sample could not be retrieved.
 
         Returns:
@@ -86,6 +88,7 @@ class CSIHAR:
         """
         buf = read_nonblocking(self.CSIFIFO, 235_000, 0)
 
+        # data might contain incomplete lines in the beginning, find first valid line
         firstvalid = next(i for i, v in enumerate(buf) if v.startswith("CSI_DATA"))
 
         try:
@@ -96,19 +99,24 @@ class CSIHAR:
                 on_bad_lines="skip",
             )
 
+            # filter HT packets
             df = df.loc[df["sig_mode"] == 1]
+            # parse CSI array
             csi_data = np.array(
                 [
                     np.fromstring(csi_record.strip("[]"), dtype=int, sep=",")
                     for csi_record in df["data"].copy()
                 ]
             )
-
+            # remove invalid subcarriers
             csi_data = np.delete(csi_data.T, NULL_SUBCARRIERS, 0).T
+            # compute CSI amplitude
             csi_amp = np.array(
                 [np.sqrt(data[::2] ** 2 + data[1::2] ** 2) for data in csi_data]
             ).T
 
+            # while parsing CSI to dataframe, bad lines were configured to be skipped. We check if the final size is consistent with
+            # the required size. If short, copy the last column for size compatibility
             diff = self.WINSIZE - csi_amp.shape[1]
 
             if diff > 0:
@@ -171,4 +179,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args)
+
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        logger.error("Terminated")
+        pass

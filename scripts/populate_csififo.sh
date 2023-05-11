@@ -60,6 +60,7 @@ echo
 
 # --- 
 
+# load emlog kernel module
 if grep --quiet 'emlog' /proc/modules; then
     echo "[+] Kernel module loaded"
 else
@@ -67,6 +68,7 @@ else
     sudo modprobe emlog
 fi
 
+# create FIFO
 if [[ -c $CSIFIFO_NAME ]]; then
     echo "[+] Detected FIFO $CSIFIFO_NAME"
 else

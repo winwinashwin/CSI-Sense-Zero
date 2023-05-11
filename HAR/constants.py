@@ -1,3 +1,4 @@
+# Header names for CSI data acquired from ESP32
 CSI_COL_NAMES = [
     "type",
     "id",
@@ -26,5 +27,6 @@ CSI_COL_NAMES = [
     "data",
 ]
 
-# Remove null subcarriers + HTLTF
+# Indices of subcarriers (actually indices of bytes, each subcarrier data is registered as two
+# signed characters - first imaginary and the second real) to remove - null + HTLTF
 NULL_SUBCARRIERS = list(range(0, 10)) + list(range(118, 256))

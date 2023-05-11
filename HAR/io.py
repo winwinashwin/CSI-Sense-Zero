@@ -3,8 +3,24 @@ import time
 import os
 from typing import List
 
+import numpy as np
+import scipy.io
+
 import websockets
 import asyncio
+
+
+def load_dataset(infile):
+    mat = scipy.io.loadmat(infile)
+    X = mat["csi"].T
+    nsamples = mat["nsamples"].flatten()
+    dim = mat["dim"].flatten()
+    classnames = list(map(lambda s: s.strip().title(), mat["classnames"]))
+    y = []
+    for i in range(len(classnames)):
+        y += [i] * nsamples[i]
+    y = np.array(y)
+    return X, y, nsamples, classnames, dim
 
 
 def read_nonblocking(path, bufferSize=100, timeout=0.100) -> List[str]:
