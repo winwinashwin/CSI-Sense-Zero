@@ -10,7 +10,7 @@ Approach based on ideas from [LiteHAR](https://arxiv.org/pdf/2201.09310.pdf) and
 
 ---
 
-<img src="./assets/arch.png">
+![system architecture](https://i.imgur.com/wa6fBCg.png)
 
 ---
 
